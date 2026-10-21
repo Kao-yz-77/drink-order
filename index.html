@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自動點飲料系統</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background-color: #f9f9f9; position: relative; margin: 0; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-top: 40px;}
+        
+        .top-bar-container { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 15px;}
+        
+        .auth-status-box { background-color: #fff3cd; padding: 8px 15px; border-radius: 4px; display: inline-flex; align-items: center; gap: 10px; font-size: 14px; color: #856404; border: 1px solid #ffeeba; }
+        .auth-status-box.admin-mode { background-color: #d4edda; color: #155724; border-color: #c3e6cb; }
+        .auth-btn { background-color: white; border: 1px solid #ccc; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .auth-btn:hover { background-color: #e9ecef; }
+        
+        .header-controls { display: flex; align-items: center; gap: 15px; }
+        
+        .menu-btn { background-color: #5b4de3; color: white; border: none; border-radius: 30px; padding: 8px 16px; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; box-shadow: 0 3px 6px rgba(91, 77, 227, 0.3); transition: all 0.2s; }
+        .menu-btn:hover { background-color: #4b3ec3; transform: translateY(-1px); box-shadow: 0 4px 8px rgba(91, 77, 227, 0.4); }
+
+        h2 { text-align: center; color: #333; margin-bottom: 20px; }
+        
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"], input[type="number"], select { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; }
+        .submit-btn { width: 100%; padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; font-weight: bold; }
+        .submit-btn:hover:not(:disabled) { background-color: #218838; }
+        
+        input:disabled, select:disabled { background-color: #e9ecef; cursor: not-allowed; color: #6c757d; }
+        button:disabled { cursor: not-allowed; opacity: 0.8; }
+
+        .summary-btn { width: 100%; padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        .summary-btn:hover:not(:disabled) { background-color: #0069d9; }
+        .export-btn { width: 100%; padding: 12px; background-color: #198754; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; font-weight: bold; margin-top: 20px; }
+        .export-btn:hover { background-color: #157347; }
+
+        .admin-only { display: none; }
+        body.is-admin div.admin-only { display: block; }
+        body.is-admin th.admin-only, body.is-admin td.admin-only { display: table-cell; }
+        body.is-admin .user-only { display: none; }
+
+        .cutoff-settings { background-color: #e2e3e5; padding: 15px; border-radius: 5px; margin-bottom: 15px; border: 1px solid #d6d8db; }
+        
+        .custom-time-picker {
+            display: flex;
+            align-items: center;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 2px 5px; 
+            width: fit-content;
+        }
+        .custom-time-picker select {
+            width: auto;
+            border: none;
+            padding: 8px 10px;
+            font-size: 18px; 
+            font-family: monospace;
+            background-color: transparent;
+            cursor: pointer;
+            outline: none;
+            text-align: center;
+            appearance: auto; 
+            -moz-appearance: auto;
+            -webkit-appearance: auto;
+        }
+        .custom-time-picker select:hover:not(:disabled) {
+            background-color: #f1f3f4;
+            border-radius: 4px;
+        }
+        .custom-time-picker select:disabled {
+            color: #6c757d;
+            cursor: not-allowed;
+            background-color: transparent;
+        }
+        .custom-time-picker .time-separator {
+            font-weight: bold;
+            font-size: 20px;
+            margin: 0 2px;
+            color: #333;
+        }
+        .custom-time-picker.disabled { background-color: #e9ecef; border-color: #ccc; }
+
+        .lock-btn { width: auto; background-color: #0dcaf0; color: #000; padding: 10px 20px; margin-left: 10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;}
+        .lock-btn:hover:not(:disabled) { background-color: #31d2f2; }
+        
+        .unlock-btn { display: none; background-color: #dc3545; color: white; padding: 10px 20px; margin-left: 10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;}
+        .unlock-btn:hover:not(:disabled) { background-color: #c82333; }
+        body.is-admin .show-unlock { display: inline-block !important; }
+
+        #cutoffMessage { text-align: center; font-size: 16px; font-weight: bold; margin-bottom: 20px; padding: 15px; border-radius: 5px; background-color: #f8f9fa; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px 8px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f2f2f2; white-space: nowrap; }
+        tfoot { background-color: #fff3cd; font-weight: bold; font-size: 16px; }
+        tfoot td { border-top: 2px solid #ffc107; }
+        .total-price { color: #d9534f; font-size: 18px; }
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 10px; }
+
+        .edit-input { width: 100%; padding: 5px; font-size: 14px; border: 1px solid #007bff; border-radius: 3px; box-sizing: border-box; }
+        .table-action-btn { background: none; border: none; cursor: pointer; font-size: 16px; padding: 4px; margin: 0 2px; border-radius: 3px; }
+        .table-action-btn:hover { background-color: #eee; }
+        .btn-edit { color: #007bff; } .btn-delete { color: #dc3545; } .btn-save { color: #28a745; } .btn-cancel { color: #6c757d; }
+
+        .status-bar { position: absolute; top: 15px; right: 20px; display: flex; align-items: center; background: white; padding: 8px 15px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); font-size: 14px; font-weight: bold; color: #555; z-index: 1000; }
+        .status-indicator { width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; box-shadow: inset 0 -1px 3px rgba(0,0,0,0.2); }
+        @keyframes pulse-orange { 0% { box-shadow: 0 0 0 0 rgba(255, 165, 0, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(255, 165, 0, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 165, 0, 0); } }
+        .status-connecting { background-color: #ffa500; animation: pulse-orange 1.5s infinite; }
+        .status-connected { background-color: #28a745; }
+        .status-disconnected { background-color: #dc3545; }
+        .time-display { margin-left: 15px; padding-left: 15px; border-left: 1px solid #ddd; font-family: monospace; font-size: 15px; }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); z-index: 9999; justify-content: center; align-items: center; }
+        .modal-content { background-color: #f8f9fa; width: 90%; max-width: 450px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); overflow: hidden; display: flex; flex-direction: column; max-height: 85vh; }
+        .modal-header { background-color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; flex-shrink: 0; }
+        .modal-header h3 { margin: 0; font-size: 18px; color: #333; display: flex; align-items: center; gap: 8px; }
+        .close-btn { background: none; border: none; font-size: 24px; color: #888; cursor: pointer; padding: 0; }
+        .close-btn:hover { color: #333; }
+        .modal-body { padding: 15px; overflow-y: auto; }
+        
+        #loginModal .modal-content { max-width: 350px; background: linear-gradient(to bottom, #ffffff, #e0e0e0); border-radius: 8px; box-shadow: 0 15px 30px rgba(0,0,0,0.5); }
+        .login-logo { font-size: 36px; font-weight: 900; font-family: 'Arial Black', sans-serif; color: #ff8c00; text-align: center; margin: 30px 0; letter-spacing: 2px; text-shadow: 0px 4px 6px rgba(0,0,0,0.1); }
+        .login-input-container { padding: 0 30px 20px; }
+        .login-input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; background-color: white; box-sizing: border-box; outline: none; }
+        .login-input:focus { border-color: #666; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); }
+        .login-btn-container { text-align: center; padding-bottom: 40px; }
+        .login-btn { background-color: #f8f9fa; color: #333; border: 1px solid #ccc; padding: 10px 40px; font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: background-color 0.2s; }
+        .login-btn:hover { background-color: #e9ecef; }
+        .login-error { color: #dc3545; font-size: 12px; text-align: center; margin-top: -10px; margin-bottom: 15px; display: none; }
+
+        .store-item { display: flex; align-items: center; background-color: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; cursor: pointer; border: 1px solid #eee; text-decoration: none; color: inherit; transition: border-color 0.2s; }
+        .store-item:hover { border-color: #5b4de3; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .store-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; font-size: 20px; margin-right: 15px; flex-shrink: 0; }
+        
+        .bg-yellow { background-color: #ffc107; color: #000; } .bg-navy { background-color: #1a2a6c; } .bg-green { background-color: #28a745; } .bg-red { background-color: #dc3545; }
+        .bg-orange { background-color: #fd7e14; } .bg-blue { background-color: #0d6efd; } .bg-teal { background-color: #20c997; } .bg-purple { background-color: #6f42c1; } .bg-custom { background-color: #6c757d; } 
+
+        .store-info { flex-grow: 1; } .store-name { margin: 0 0 4px 0; font-size: 16px; font-weight: bold; color: #333; } .store-desc { margin: 0; font-size: 12px; color: #888; }
+        .arrow-icon { color: #ccc; font-size: 18px; font-weight: bold; }
+
+        .add-store-btn { display: flex; align-items: center; justify-content: center; padding: 15px; background-color: #e9ecef; color: #495057; border-radius: 8px; cursor: pointer; border: 2px dashed #ced4da; font-weight: bold; margin-top: 10px; transition: all 0.2s;}
+        .add-store-btn:hover { background-color: #dee2e6; border-color: #adb5bd; }
+
+        #imageViewerModal .modal-content { width: 95%; max-width: 1200px; max-height: 95vh; background-color: #111; }
+        #imageViewerModal .modal-header { background-color: #222; border-bottom: 1px solid #333; color: white; }
+        #imageViewerModal .modal-header h3 { color: white; font-size: 18px; }
+        #imageViewerModal .close-btn { color: #ddd; }
+        .back-btn { background: none; border: none; color: #0dcaf0; font-size: 16px; cursor: pointer; padding: 5px 10px 5px 0; display: flex; align-items: center; font-weight: bold;}
+        .loader { color: #fff; text-align: center; padding: 40px; font-size: 16px; letter-spacing: 2px; }
+        .image-container { width: 100%; height: 100%; overflow: auto; display: flex; justify-content: center; align-items: flex-start; background-color: #111; }
+        #menuImageDisplay { max-width: 100%; height: auto; object-fit: contain; display: none; }
+
+        #addStoreModal .modal-content { max-width: 400px; border-radius: 8px; }
+        .add-store-form { padding: 25px 20px 20px 20px; background-color: white; }
+        .material-input-group { margin-bottom: 25px; position: relative; padding-top: 15px; }
+        .material-input { width: 100%; border: 1px solid #ccc; border-radius: 4px; padding: 12px 10px; font-size: 16px; background: transparent; outline: none; box-sizing: border-box; }
+        .material-input:focus { border-color: #5b4de3; box-shadow: 0 0 0 1px #5b4de3; }
+        .material-label { position: absolute; top: 5px; left: 10px; font-size: 12px; color: #5b4de3; font-weight: bold; background-color: white; padding: 0 5px; }
+        .char-count { text-align: right; font-size: 12px; color: #888; margin-top: 5px; }
+        .modal-action-btns { display: flex; justify-content: flex-end; gap: 15px; margin-top: 15px; }
+        .action-btn { background: none; border: none; font-size: 15px; font-weight: bold; cursor: pointer; padding: 8px 16px; border-radius: 4px; }
+        .cancel-btn { color: #555; } .cancel-btn:hover { background-color: #f1f3f4; }
+        .insert-btn { background-color: #e0e0e0; color: #9e9e9e; cursor: not-allowed; }
+        .insert-btn.active { background-color: #5b4de3; color: white; cursor: pointer; }
+
+        #customConfirmModal .modal-content { max-width: 320px; padding: 25px; border-radius: 12px; background-color: white; text-align: center; }
+        #customConfirmMessage { font-size: 15px; color: #555; margin: 15px 0 25px; line-height: 1.5; white-space: pre-wrap; }
+        .confirm-btn-group { display: flex; justify-content: space-between; gap: 10px; }
+        .confirm-btn { flex: 1; padding: 10px; border-radius: 6px; font-weight: bold; border: none; cursor: pointer; transition: 0.2s; font-size: 14px;}
+        .confirm-btn-cancel { background-color: #e9ecef; color: #495057; }
+        .confirm-btn-cancel:hover { background-color: #dde2e6; }
+        .confirm-btn-danger { background-color: #dc3545; color: white; }
+        .confirm-btn-danger:hover { background-color: #c82333; }
+
+        @media (max-width: 768px) {
+            .top-bar-container { flex-direction: column; gap: 10px; align-items: stretch;}
+            .header-controls { justify-content: space-between; }
+            .status-bar { top: 10px; right: 10px; padding: 6px 12px; font-size: 12px; }
+            .lock-btn, .unlock-btn { padding: 8px; margin-left: 5px; font-size: 13px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="status-bar">
+    <div id="statusDot" class="status-indicator status-connecting"></div>
+    <span id="statusText">連線中...</span>
+    <span id="clock" class="time-display">--:--:--</span>
+</div>
+
+<div class="container">
+    <div class="top-bar-container">
+        <div id="authStatusBox" class="auth-status-box">
+            <span id="authStatusText">目前身分：一般填寫人員</span>
+            <button class="auth-btn" onclick="toggleAuth()">切換身分</button>
+        </div>
+        <div class="header-controls">
+            <span class="user-only" style="font-weight:bold; color:#6c757d; font-size:14px;">☕ 飲料訂購單</span>
+            <button type="button" class="menu-btn" onclick="openMenuModal()">🏪 選擇飲料店菜單</button>
+        </div>
+    </div>
+
+    <div class="cutoff-settings admin-only">
+        <label style="color: #383d41; font-size:16px;">⚙️ [管理員專屬] 全域設定今日截止時間:</label>
+        <div style="display: flex; align-items: center; margin-top: 5px;">
+            
+            <div id="timePickerWrapper" class="custom-time-picker">
+                <select id="cutoffHour" onchange="checkTimeChange()"></select>
+                <span class="time-separator">:</span>
+                <select id="cutoffMinute" onchange="checkTimeChange()"></select>
+            </div>
+
+            <button id="lockTimeBtn" class="lock-btn" onclick="lockCutoffTime()">確定鎖定</button>
+            <button id="unlockTimeBtn" class="unlock-btn" onclick="actionUnlockTime()">🔓 解除鎖定 (重新開放)</button>
+        </div>
+        <div id="lockStatusMessage" style="font-size: 13px; color: #6c757d; margin-top: 8px;">※ 鎖定或解鎖將同步套用至所有人。午夜 00:00 系統會自動重置。</div>
+    </div>
+
+    <div id="cutoffMessage"></div>
+
+    <div id="orderFormContainer">
+        <form id="orderForm">
+            <div class="form-group"><label for="orderName">訂購人:</label><input type="text" id="orderName" placeholder="例如：高宇哲" required></div>
+            <div class="form-group"><label for="drinkName">飲品名稱 (請手動輸入):</label><input type="text" id="drinkName" placeholder="例如：四季春茶" required></div>
+            <div class="form-group"><label for="size">容量:</label><select id="size" required><option value="L">L (大杯)</option><option value="M">M (中杯)</option></select></div>
+            <div class="form-group"><label for="ice">冰塊:</label><select id="ice" required><option value="正常冰">正常冰</option><option value="少冰">少冰</option><option value="微冰">微冰</option><option value="去冰">去冰</option><option value="完全去冰">完全去冰</option><option value="常溫">常溫</option><option value="熱">熱</option></select></div>
+            <div class="form-group"><label for="sugar">甜度:</label><select id="sugar" required><option value="正常糖">正常糖</option><option value="少糖">少糖</option><option value="半糖">半糖</option><option value="微糖">微糖</option><option value="無糖">無糖</option></select></div>
+            <div class="form-group"><label for="price">價格 (元):</label><input type="number" id="price" min="0" placeholder="例如：45" required></div>
+            <button type="submit" id="submitBtn" class="submit-btn">送出訂單</button>
+        </form>
+    </div>
+
+    <h2 style="margin-top: 40px; text-align: center; color:#333;">📋 訂單總覽 (僅顯示今日)</h2>
+    <button class="export-btn" onclick="exportToExcel()" id="exportBtn">📥 匯出 Excel 列表</button>
+    <button class="summary-btn" onclick="loadOrders()" id="reloadBtn">🔄 重新整理訂單</button>
+    
+    <div class="table-responsive">
+        <table id="orderTable">
+            <thead>
+                <tr>
+                    <th>訂餐時間</th><th>訂購人</th><th>飲品</th><th>容量</th><th>冰塊</th><th>甜度</th><th>價格</th>
+                    <th class="admin-only" style="text-align:center;">操作 (管理員)</th>
+                </tr>
+            </thead>
+            <tbody><tr><td colspan="8" style="text-align:center;">載入中...</td></tr></tbody>
+            <tfoot id="orderTableFoot">
+                <tr>
+                    <td colspan="6" style="text-align:right;">今日總計金額：</td>
+                    <td class="total-price" id="totalAmountDisplay">$0</td>
+                    <td class="admin-only"></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<div id="customConfirmModal" class="modal-overlay" style="z-index: 10000;">
+    <div class="modal-content">
+        <h3 style="margin-top: 0; color: #333;">⚠️ 確認操作</h3>
+        <p id="customConfirmMessage"></p>
+        <div class="confirm-btn-group">
+            <button class="confirm-btn confirm-btn-cancel" onclick="closeCustomConfirm()">取消</button>
+            <button id="customConfirmOkBtn" class="confirm-btn confirm-btn-danger">確定</button>
+        </div>
+    </div>
+</div>
+
+<div id="loginModal" class="modal-overlay" onclick="closeLoginModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="login-logo">TUF-ONE</div>
+        <div class="login-input-container">
+            <input type="password" id="adminPasswordInput" class="login-input" placeholder="管理員密碼" onkeypress="handleLoginEnter(event)">
+        </div>
+        <div id="loginErrorMsg" class="login-error">密碼錯誤，請重新輸入</div>
+        <div class="login-btn-container">
+            <button class="login-btn" onclick="verifyAdmin()">登 入</button>
+        </div>
+    </div>
+</div>
+
+<div id="menuModal" class="modal-overlay" onclick="closeMenuModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <h3>🏪 請選擇飲料店</h3>
+            <button class="close-btn" onclick="closeMenuModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="menuListContainer">
+            <div class="store-item" onclick="showMenuImage('1aKawumOCMP0RpMX-G_9YC8za-evYw9__', '50嵐')"><div class="store-icon bg-yellow">🥤</div><div class="store-info"><p class="store-name">50嵐</p><p class="store-desc">經典不敗的國民飲料店</p></div><div class="arrow-icon">›</div></div>
+            <div class="store-item" onclick="showMenuImage('1nInhPLgghWmEOvDc2kEJeZUS2p0GF3ie', '麻古茶坊')"><div class="store-icon bg-red">🥤</div><div class="store-info"><p class="store-name">麻古茶坊</p><p class="store-desc">喝的甜品，新鮮果粒茶</p></div><div class="arrow-icon">›</div></div>
+            <div class="store-item" onclick="showMenuImage('1yeUL9PPtZ64huFeyRGsHE4ekynancf6i', '得正')"><div class="store-icon bg-navy">🥤</div><div class="store-info"><p class="store-name">得正</p><p class="store-desc">專注烏龍茶的職人品牌</p></div><div class="arrow-icon">›</div></div>
+            <div class="store-item" onclick="showMenuImage('1YzKmWXQqvk1W5ZUNirWHJ4X2LtCE5HoE', '龜記茗品')"><div class="store-icon bg-green">🥤</div><div class="store-info"><p class="store-name">龜記茗品</p><p class="store-desc">小人物大生活，紅柚翡翠</p></div><div class="arrow-icon">›</div></div>
+            <div class="store-item" onclick="showMenuImage('1A4LaNlFSivEBrmDRAXhpwd74y9Cs1SKt', '五桐號')"><div class="store-icon bg-orange">🥤</div><div class="store-info"><p class="store-name">五桐號</p><p class="store-desc">手工凍飲與手沖泰奶</p></div><div class="arrow-icon">›</div></div>
+            <div class="store-item" onclick="showMenuImage('1l7mHhFQ5FHImBWCtbSwRoX6HRnYF8mzj', '烏弄')"><div class="store-icon bg-teal">🥤</div><div class="store-info"><p class="store-name">烏弄</p><p class="store-desc">台灣原茶，自然好韻味</p></div><div class="arrow-icon">›</div></div>
+            <div class="store-item" onclick="showMenuImage('1V9vyYuDORZcxuQaMqKfJgYlUWRfrpBhK', '水巷茶弄')"><div class="store-icon bg-blue">🥤</div><div class="store-info"><p class="store-name">水巷茶弄</p><p class="store-desc">好茶煮好料，經典回味</p></div><div class="arrow-icon">›</div></div>
+            <div class="store-item" onclick="showMenuImage('15_2H9XhhE53Q9fguWOUcfnTzAYM3yKlA', '華得來')"><div class="store-icon bg-purple">🥤</div><div class="store-info"><p class="store-name">華得來</p><p class="store-desc">海線傳奇，料多實在</p></div><div class="arrow-icon">›</div></div>
+            <div class="store-item" onclick="showMenuImage('10GVcm0k6u-dqP60jCUtAFzWeXlXMQ6GW', '果果青')"><div class="store-icon" style="background-color:#5cce69;">🥤</div><div class="store-info"><p class="store-name">果果青</p><p class="store-desc">新鮮鮮果茶飲</p></div><div class="arrow-icon">›</div></div>
+            <div id="customStoreAnchor"></div>
+            <div class="add-store-btn" onclick="openAddStoreModal()">+ 新增店家菜單</div>
+        </div>
+    </div>
+</div>
+
+<div id="addStoreModal" class="modal-overlay" onclick="closeAddStoreModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="add-store-form">
+            <div class="material-input-group">
+                <label class="material-label">名稱</label>
+                <input type="text" id="newStoreName" class="material-input" oninput="checkAddStoreInput()">
+                <div class="char-count"><span id="nameCount">0</span>/120</div>
+            </div>
+            <div class="material-input-group">
+                <label class="material-label">Google Drive 圖片連結</label>
+                <input type="text" id="newStoreLink" class="material-input" placeholder="請貼上共用連結" oninput="checkAddStoreInput()">
+            </div>
+            <div class="modal-action-btns">
+                <button class="action-btn cancel-btn" onclick="closeAddStoreModal()">取消</button>
+                <button id="insertStoreBtn" class="action-btn insert-btn" onclick="submitNewStore()">插入</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="imageViewerModal" class="modal-overlay" onclick="closeImageViewer(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <button class="back-btn" onclick="backToMenuList()">🔙 返回</button>
+            <h3 id="imageViewerTitle" style="margin:0;">菜單圖片</h3>
+            <button class="close-btn" onclick="closeImageViewer()">&times;</button>
+        </div>
+        <div class="modal-body image-container" style="padding: 0;">
+            <div id="imageLoader" class="loader">圖片載入中，請稍候...</div>
+            <img id="menuImageDisplay" src="" alt="菜單圖片" onload="imageLoaded()" onerror="imageError()">
+            <div id="imageErrorMsg" style="display: none; padding: 40px 20px; color: #fff; text-align: center; width: 100%;">
+                <p>無法直接載入圖片。<br>可能是 Google Drive 隱私權限阻擋。</p>
+                <a id="driveLinkBtn" href="#" target="_blank" style="display: inline-block; margin-top: 15px; padding: 10px 20px; background-color: #0dcaf0; color: #000; text-decoration: none; border-radius: 5px; font-weight: bold;">點此開啟原圖</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 👇👇👇 這裡換成你的 Google Apps Script 部署網址 👇👇👇
+    const API_URL = 'https://script.google.com/macros/s/AKfycbxMJY-qiA-hbJ2isP5DQlEsdAftgOJ3mIwA0TLew1Y8tmp4jO9HmdIyyIhCKSAIcadjSA/exec';
+    // 👆👆👆 
+
+    function initTimeSelectors() {
+        const hourSelect = document.getElementById('cutoffHour');
+        const minuteSelect = document.getElementById('cutoffMinute');
+        
+        for (let i = 0; i <= 23; i++) {
+            let opt = document.createElement('option');
+            let val = i.toString().padStart(2, '0');
+            opt.value = val;
+            opt.text = val;
+            hourSelect.appendChild(opt);
+        }
+        
+        for (let i = 0; i <= 59; i++) {
+            let opt = document.createElement('option');
+            let val = i.toString().padStart(2, '0');
+            opt.value = val;
+            opt.text = val;
+            minuteSelect.appendChild(opt);
+        }
+        
+        hourSelect.value = '11';
+        minuteSelect.value = '00';
+    }
+
+    function getSelectedTime() {
+        const h = document.getElementById('cutoffHour').value;
+        const m = document.getElementById('cutoffMinute').value;
+        return `${h}:${m}`;
+    }
+
+    // 將時間字串分配回下拉選單，並設定停用狀態 (不再強制複寫目前使用者的選擇，除非是鎖定狀態)
+    function updateTimePickerUI(timeString, disabled) {
+        const hourSelect = document.getElementById('cutoffHour');
+        const minuteSelect = document.getElementById('cutoffMinute');
+        const wrapper = document.getElementById('timePickerWrapper');
+
+        if (disabled) {
+            if (timeString && timeString.includes(':')) {
+                const [h, m] = timeString.split(':');
+                hourSelect.value = h;
+                minuteSelect.value = m;
+            }
+            wrapper.classList.add('disabled');
+        } else {
+            wrapper.classList.remove('disabled');
+        }
+
+        hourSelect.disabled = disabled;
+        minuteSelect.disabled = disabled;
+    }
+
+    // 變更時間時，只負責檢查是否該隱藏表單
+    function checkTimeChange() {
+        const todayStr = getTodayDateString(new Date());
+        if (!(globalSettings.date === todayStr && globalSettings.isLocked)) {
+            checkCutoffTime(new Date());
+        }
+    }
+
+    let confirmCallback = null;
+    function showConfirm(msg, callback) { document.getElementById('customConfirmMessage').innerText = msg; document.getElementById('customConfirmModal').style.display = 'flex'; confirmCallback = callback; }
+    function closeCustomConfirm() { document.getElementById('customConfirmModal').style.display = 'none'; confirmCallback = null; }
+    document.getElementById('customConfirmOkBtn').addEventListener('click', function() { if (confirmCallback) confirmCallback(); closeCustomConfirm(); });
+
+    let isAdmin = false;
+
+    function toggleAuth() {
+        if (isAdmin) {
+            isAdmin = false;
+            document.body.classList.remove('is-admin');
+            document.getElementById('authStatusText').innerText = '目前身分：一般填寫人員';
+            document.getElementById('authStatusBox').classList.remove('admin-mode');
+            document.getElementById('unlockTimeBtn').classList.remove('show-unlock');
+            loadOrders(); 
+        } else {
+            document.getElementById('loginModal').style.display = 'flex';
+            document.getElementById('adminPasswordInput').value = '';
+            document.getElementById('loginErrorMsg').style.display = 'none';
+            document.getElementById('adminPasswordInput').focus();
+        }
+    }
+
+    function closeLoginModal(event) { if(event && event.target.id !== 'loginModal') return; document.getElementById('loginModal').style.display = 'none'; }
+    function handleLoginEnter(event) { if (event.key === 'Enter') verifyAdmin(); }
+
+    function verifyAdmin() {
+        const pwd = document.getElementById('adminPasswordInput').value;
+        if (pwd === 'Turvo@1987') {
+            isAdmin = true;
+            document.body.classList.add('is-admin');
+            document.getElementById('authStatusText').innerText = '目前身分：管理者 (可修改訂單與截止時間)';
+            document.getElementById('authStatusBox').classList.add('admin-mode');
+            closeLoginModal();
+            loadOrders(); 
+            initCutoffSettings(new Date());
+        } else {
+            document.getElementById('loginErrorMsg').style.display = 'block';
+        }
+    }
+
+    let globalSettings = { date: '', time: '11:00', isLocked: false };
+    function getTodayDateString(now) { return now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate(); }
+
+    function lockCutoffTime() {
+        if (API_URL === '你要換成你的網址') return alert('請先設定 API 網址！');
+        const timeValue = getSelectedTime();
+        if (!timeValue) return alert('請先選擇時間！');
+        
+        const lockBtn = document.getElementById('lockTimeBtn');
+        lockBtn.innerText = '鎖定中...'; lockBtn.disabled = true;
+        setConnectionStatus('connecting');
+
+        const todayStr = getTodayDateString(new Date()); 
+        fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'updateCutoff', date: todayStr, time: timeValue, isLocked: true }) })
+        .then(response => response.json())
+        .then(result => {
+            if(result.result === 'success') {
+                globalSettings.date = todayStr; globalSettings.time = timeValue; globalSettings.isLocked = true;
+                alert(`✅ 已成功為「所有人」鎖定今日截止時間為：${timeValue}`);
+                initCutoffSettings(new Date()); 
+            } else { alert('鎖定失敗：' + result.message); lockBtn.innerText = '確定鎖定'; lockBtn.disabled = false; }
+            setConnectionStatus('connected');
+        })
+        .catch(error => { alert('網路失敗。'); lockBtn.innerText = '確定鎖定'; lockBtn.disabled = false; setConnectionStatus('disconnected'); });
+    }
+
+    function actionUnlockTime() {
+        showConfirm("確定要解除鎖定嗎？\n解除後將重新開放所有人填寫訂購單。", function() {
+            if (API_URL === '你要換成你的網址') return alert('請先設定 API 網址！');
+
+            const unlockBtn = document.getElementById('unlockTimeBtn');
+            unlockBtn.innerText = '處理中...';
+            unlockBtn.disabled = true;
+            setConnectionStatus('connecting');
+
+            const todayStr = getTodayDateString(new Date()); 
+            const resetTime = globalSettings.time || '11:00';
+
+            fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'updateCutoff', date: todayStr, time: resetTime, isLocked: false }) })
+            .then(response => response.json())
+            .then(result => {
+                if(result.result === 'success') {
+                    globalSettings.isLocked = false;
+                    alert(`🔓 已成功解除鎖定！現在所有人都可以繼續訂購。`);
+                    initCutoffSettings(new Date()); 
+                } else { alert('解鎖失敗：' + result.message); }
+            })
+            .catch(error => { alert('網路連線失敗，無法解鎖。'); })
+            .finally(() => { unlockBtn.innerText = '🔓 解除鎖定 (重新開放)'; unlockBtn.disabled = false; setConnectionStatus('connected'); });
+        });
+    }
+
+    function initCutoffSettings(now) {
+        const todayStr = getTodayDateString(now);
+        const lockBtn = document.getElementById('lockTimeBtn');
+        const unlockBtn = document.getElementById('unlockTimeBtn');
+        const statusMsg = document.getElementById('lockStatusMessage');
+
+        if (globalSettings.date === todayStr && globalSettings.isLocked) {
+            updateTimePickerUI(globalSettings.time, true);
+            
+            lockBtn.disabled = true;
+            lockBtn.innerText = '🔒 全域已鎖定'; 
+            lockBtn.style.backgroundColor = '#6c757d'; 
+            lockBtn.style.color = '#fff';
+            statusMsg.innerHTML = `🔒 系統已將今日截止時間強制鎖定為 <strong style="color:#d9534f;">${globalSettings.time}</strong>。`; 
+            statusMsg.style.color = '#198754';
+
+            if(isAdmin) unlockBtn.classList.add('show-unlock');
+            else unlockBtn.classList.remove('show-unlock');
+        } else {
+            // 解鎖狀態下，不要強制刷新使用者的時間選單
+            updateTimePickerUI(null, false);
+            
+            lockBtn.disabled = false;
+            lockBtn.innerText = '確定鎖定'; 
+            lockBtn.style.backgroundColor = '#0dcaf0'; 
+            lockBtn.style.color = '#000';
+            statusMsg.innerHTML = '※ 鎖定或解鎖將同步套用至所有人。午夜 00:00 自動重置。'; 
+            statusMsg.style.color = '#6c757d';
+
+            unlockBtn.classList.remove('show-unlock');
+        }
+        checkCutoffTime(now);
+    }
+
+    function checkCutoffTime(now) {
+        let cutoffValue = '11:00';
+        const todayStr = getTodayDateString(now);
+        if (globalSettings.date === todayStr && globalSettings.isLocked) cutoffValue = globalSettings.time;
+        else cutoffValue = getSelectedTime();
+
+        const [cutoffHour, cutoffMinute] = cutoffValue.split(':').map(Number);
+        const cutoffDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), cutoffHour, cutoffMinute, 0);
+        const orderFormContainer = document.getElementById('orderFormContainer');
+        const cutoffMessage = document.getElementById('cutoffMessage');
+
+        if (globalSettings.date === todayStr && globalSettings.isLocked && now >= cutoffDate) {
+            orderFormContainer.style.display = 'none';
+            cutoffMessage.innerHTML = `⚠️ 今日訂餐已截止 (截止時間：${cutoffValue})<br><span style="font-size:14px; font-weight:normal; display:block; margin-top:5px;">目前僅開放檢視下方訂單總覽與匯出表單</span>`;
+            cutoffMessage.style.color = '#842029'; cutoffMessage.style.backgroundColor = '#f8d7da'; cutoffMessage.style.border = '2px solid #f5c6cb';
+        } else {
+            orderFormContainer.style.display = 'block';
+            let msgText = globalSettings.isLocked ? `✅ 系統開放中，今日訂餐截止時間為 <strong>${cutoffValue}</strong>，請盡早填寫。` : `✅ 系統開放中 (尚未鎖定截止時間)，請自由填寫訂購。`;
+            cutoffMessage.innerHTML = msgText;
+            cutoffMessage.style.color = '#0f5132'; cutoffMessage.style.backgroundColor = '#d1e7dd'; cutoffMessage.style.border = '2px solid #badbcc';
+        }
+    }
+
+
+    function editRow(btn, rowIndex) {
+        const tr = btn.closest('tr');
+        const cells = tr.querySelectorAll('td:not(.admin-only)');
+        const sizes = ['L', 'M'];
+        const ices = ['正常冰', '少冰', '微冰', '去冰', '完全去冰', '常溫', '熱'];
+        const sugars = ['正常糖', '少糖', '半糖', '微糖', '無糖'];
+
+        tr.dataset.original = JSON.stringify(Array.from(cells).map(td => td.innerText));
+        cells[1].innerHTML = `<input type="text" class="edit-input" value="${cells[1].innerText}">`;
+        cells[2].innerHTML = `<input type="text" class="edit-input" value="${cells[2].innerText}">`;
+        cells[3].innerHTML = createSelectTableHTML(sizes, cells[3].innerText);
+        cells[4].innerHTML = createSelectTableHTML(ices, cells[4].innerText);
+        cells[5].innerHTML = createSelectTableHTML(sugars, cells[5].innerText);
+        const currentPrice = cells[6].innerText.replace('$', '');
+        cells[6].innerHTML = `<input type="number" min="0" class="edit-input" value="${currentPrice}">`;
+
+        const actionTd = tr.querySelector('.admin-only');
+        actionTd.innerHTML = `<button class="table-action-btn btn-save" onclick="saveRow(this, ${rowIndex})" title="儲存">💾</button><button class="table-action-btn btn-cancel" onclick="cancelEdit(this)" title="取消">❌</button>`;
+    }
+    
+    function createSelectTableHTML(options, selectedValue) {
+        let html = `<select class="edit-input">`;
+        options.forEach(opt => { const selected = (opt === selectedValue) ? 'selected' : ''; html += `<option value="${opt}" ${selected}>${opt}</option>`; });
+        html += `</select>`; return html;
+    }
+    
+    function cancelEdit(btn) { loadOrders(); }
+
+    function saveRow(btn, rowIndex) {
+        const tr = btn.closest('tr');
+        const inputs = tr.querySelectorAll('.edit-input');
+        const timeVal = tr.querySelectorAll('td')[0].innerText;
+        const updatedData = { time: timeVal, orderName: inputs[0].value, drinkName: inputs[1].value, size: inputs[2].value, ice: inputs[3].value, sugar: inputs[4].value, price: inputs[5].value };
+
+        btn.innerHTML = '⏳'; btn.disabled = true; tr.style.opacity = '0.7';
+
+        fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'updateOrder', rowIndex: rowIndex, orderData: updatedData }) })
+        .then(response => response.json())
+        .then(result => { if(result.result === 'success') loadOrders(); else { alert('更新失敗：' + result.message); cancelEdit(btn); } })
+        .catch(error => { alert('網路錯誤，無法更新。'); cancelEdit(btn); });
+    }
+
+    function actionDeleteRow(rowIndex, orderName) {
+        showConfirm(`確定要刪除「${orderName}」的這筆訂單嗎？刪除後無法復原。`, function() {
+            setConnectionStatus('connecting');
+            fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'deleteOrder', rowIndex: rowIndex }) })
+            .then(response => response.json())
+            .then(result => { if(result.result === 'success') loadOrders(); else alert('刪除失敗：' + result.message); setConnectionStatus('connected'); })
+            .catch(error => { alert('網路錯誤，無法刪除。'); setConnectionStatus('disconnected'); });
+        });
+    }
+
+    function loadOrders() {
+        if (API_URL === '你要換成你的網址') return; 
+        const tbody = document.querySelector('#orderTable tbody');
+        const reloadBtn = document.getElementById('reloadBtn');
+        const totalDisplay = document.getElementById('totalAmountDisplay');
+        reloadBtn.innerText = '載入中...'; reloadBtn.disabled = true;
+        setConnectionStatus('connecting');
+        
+        fetch(API_URL)
+        .then(response => { if(response.ok) setConnectionStatus('connected'); return response.json(); })
+        .then(result => {
+            globalSettings = result.settings || { date: '', time: '11:00', isLocked: false };
+            
+            // 初始化時，如果不是鎖定狀態，將伺服器的預設時間同步到 UI
+            if (globalSettings.date === getTodayDateString(new Date()) && globalSettings.isLocked) {
+                initCutoffSettings(new Date());
+            } else {
+                updateTimePickerUI(globalSettings.time || '11:00', false);
+                initCutoffSettings(new Date());
+            }
+
+            if(result.customMenus) renderCustomMenus(result.customMenus);
+
+            const data = result.orders || [];
+            tbody.innerHTML = ''; let totalAmount = 0; 
+            const today = new Date(); const currentYear = today.getFullYear(); const currentMonth = today.getMonth(); const currentDate = today.getDate();
+
+            const todaysOrders = data.filter(order => {
+                let orderDate = new Date(order.time);
+                if (isNaN(orderDate)) { orderDate = new Date(order.time.split(/[ ,]+/)[0]); }
+                if (isNaN(orderDate)) return true; 
+                return orderDate.getFullYear() === currentYear && orderDate.getMonth() === currentMonth && orderDate.getDate() === currentDate;
+            });
+
+            if(todaysOrders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="${isAdmin ? 8 : 7}" style="text-align:center; color:#888;">今天目前尚無訂單，快來點一杯吧！</td></tr>`;
+                totalDisplay.innerText = '$0'; return;
+            }
+            
+            todaysOrders.reverse().forEach(order => {
+                totalAmount += Number(order.price) || 0;
+                let displayTime = order.time;
+                const d = new Date(order.time);
+                if (!isNaN(d)) displayTime = d.getFullYear() + '/' + (d.getMonth()+1).toString().padStart(2, '0') + '/' + d.getDate().toString().padStart(2, '0') + ' ' + d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0') + ':' + d.getSeconds().toString().padStart(2, '0');
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${displayTime}</td><td>${order.orderName}</td><td>${order.drinkName}</td>
+                    <td>${order.size}</td><td>${order.ice}</td><td>${order.sugar}</td><td>$${order.price}</td>
+                    <td class="admin-only" style="text-align:center;">
+                        <button class="table-action-btn btn-edit" onclick="editRow(this, ${order.rowIndex})" title="編輯">✏️</button>
+                        <button class="table-action-btn btn-delete" onclick="actionDeleteRow(${order.rowIndex}, '${order.orderName}')" title="刪除">🗑️</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            totalDisplay.innerText = '$' + totalAmount;
+        })
+        .catch(error => { tbody.innerHTML = `<tr><td colspan="${isAdmin ? 8 : 7}" style="text-align:center; color:red;">讀取失敗</td></tr>`; totalDisplay.innerText = '$0'; setConnectionStatus('disconnected'); })
+        .finally(() => { reloadBtn.innerText = '🔄 重新整理訂單'; reloadBtn.disabled = false; });
+    }
+
+    document.getElementById('orderForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const now = new Date(); let cutoffValue = '11:00'; const todayStr = getTodayDateString(now);
+        
+        if (globalSettings.date === todayStr && globalSettings.isLocked) {
+            cutoffValue = globalSettings.time;
+            const [cutoffHour, cutoffMinute] = cutoffValue.split(':').map(Number);
+            const cutoffDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), cutoffHour, cutoffMinute, 0);
+            if (now >= cutoffDate) { alert('已超過今日訂餐時間！'); checkCutoffTime(now); return; }
+        }
+        
+        if (API_URL === '你要換成你的網址') return alert('請先設定 API 網址！');
+
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.innerText = '送出中...'; submitBtn.disabled = true; setConnectionStatus('connecting'); 
+
+        const payload = { action: 'newOrder', orderName: document.getElementById('orderName').value, drinkName: document.getElementById('drinkName').value, size: document.getElementById('size').value, ice: document.getElementById('ice').value, sugar: document.getElementById('sugar').value, price: document.getElementById('price').value };
+
+        fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) })
+        .then(response => response.json())
+        .then(result => {
+            if(result.result === 'success') { alert('訂單送出成功！'); document.getElementById('orderForm').reset(); setConnectionStatus('connected'); loadOrders(); } 
+            else { alert('發生錯誤：' + result.message); setConnectionStatus('disconnected'); }
+        })
+        .catch(error => { alert('網路連線失敗，請稍後再試。'); setConnectionStatus('disconnected'); })
+        .finally(() => { submitBtn.innerText = '送出訂單'; submitBtn.disabled = false; checkCutoffTime(new Date()); });
+    });
+
+    function exportToExcel() {
+        const table = document.getElementById("orderTable");
+        const tbody = table.querySelector("tbody");
+        if(tbody.innerText.includes("載入中") || tbody.innerText.includes("目前尚無訂單")) return alert("目前沒有資料可以匯出！");
+        
+        const exportTable = table.cloneNode(true);
+        exportTable.querySelectorAll('tr').forEach(row => {
+            const adminCell = row.querySelector('.admin-only');
+            if (adminCell) adminCell.remove();
+        });
+
+        const wb = XLSX.utils.table_to_book(exportTable, {sheet: "今日飲料訂單"});
+        const today = new Date(); const dateStr = today.getFullYear() + "-" + (today.getMonth()+1).toString().padStart(2, '0') + "-" + today.getDate().toString().padStart(2, '0');
+        XLSX.writeFile(wb, `今日飲料訂單_${dateStr}.xlsx`);
+    }
+
+    // 只有時鐘與時間檢查功能，不再觸發更新 UI 選單，以防止卡死
+    function updateClock() {
+        const now = new Date();
+        const h = now.getHours().toString().padStart(2, '0');
+        const m = now.getMinutes().toString().padStart(2, '0');
+        const s = now.getSeconds().toString().padStart(2, '0');
+        document.getElementById('clock').innerText = `${h}:${m}:${s}`;
+        
+        checkCutoffTime(now);    
+    }
+    setInterval(updateClock, 1000);
+
+    function setConnectionStatus(status) {
+        const dot = document.getElementById('statusDot'); const text = document.getElementById('statusText');
+        dot.classList.remove('status-connecting', 'status-connected', 'status-disconnected');
+        if (status === 'connecting') { dot.classList.add('status-connecting'); text.innerText = '連線中...'; text.style.color = '#ffa500'; } 
+        else if (status === 'connected') { dot.classList.add('status-connected'); text.innerText = '已連線'; text.style.color = '#28a745'; } 
+        else if (status === 'disconnected') { dot.classList.add('status-disconnected'); text.innerText = '未連線'; text.style.color = '#dc3545'; }
+    }
+    function checkConnection() {
+        if (API_URL === '你要換成你的網址') return setConnectionStatus('disconnected');
+        setConnectionStatus('connecting');
+        fetch(API_URL).then(response => { if (response.ok) setConnectionStatus('connected'); else setConnectionStatus('disconnected'); }).catch(() => setConnectionStatus('disconnected'));
+    }
+
+    function openMenuModal() { document.getElementById('menuModal').style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+    function closeMenuModal(event) { if(event && event.target.id !== 'menuModal' && !event.target.classList.contains('close-btn')) return; document.getElementById('menuModal').style.display = 'none'; document.body.style.overflow = 'auto'; }
+    function showMenuImage(fileId, storeName) { document.getElementById('menuModal').style.display = 'none'; document.getElementById('imageViewerTitle').innerText = `${storeName} 菜單`; const img = document.getElementById('menuImageDisplay'); const loader = document.getElementById('imageLoader'); const errorMsg = document.getElementById('imageErrorMsg'); img.style.display = 'none'; errorMsg.style.display = 'none'; loader.style.display = 'block'; let cleanId = fileId; const idMatch = fileId.match(/[-\w]{25,}/); if (idMatch) cleanId = idMatch[0]; img.src = `https://drive.google.com/thumbnail?id=${cleanId}&sz=w2000`; document.getElementById('driveLinkBtn').href = `https://drive.google.com/file/d/${cleanId}/view?usp=sharing`; document.getElementById('imageViewerModal').style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+    function imageLoaded() { document.getElementById('imageLoader').style.display = 'none'; document.getElementById('menuImageDisplay').style.display = 'block'; }
+    function imageError() { document.getElementById('imageLoader').style.display = 'none'; document.getElementById('menuImageDisplay').style.display = 'none'; document.getElementById('imageErrorMsg').style.display = 'block'; }
+    function backToMenuList() { document.getElementById('imageViewerModal').style.display = 'none'; document.getElementById('menuModal').style.display = 'flex'; }
+    function closeImageViewer(event) { if(event && event.target.id !== 'imageViewerModal' && !event.target.classList.contains('close-btn')) return; document.getElementById('imageViewerModal').style.display = 'none'; document.body.style.overflow = 'auto'; }
+    function openAddStoreModal() { document.getElementById('menuModal').style.display = 'none'; document.getElementById('addStoreModal').style.display = 'flex'; document.getElementById('newStoreName').value = ''; document.getElementById('newStoreLink').value = ''; checkAddStoreInput(); }
+    function closeAddStoreModal(event) { if(event && event.target.id !== 'addStoreModal' && !event.target.classList.contains('cancel-btn')) return; document.getElementById('addStoreModal').style.display = 'none'; document.getElementById('menuModal').style.display = 'flex'; }
+    function checkAddStoreInput() { const name = document.getElementById('newStoreName').value; const link = document.getElementById('newStoreLink').value; const btn = document.getElementById('insertStoreBtn'); document.getElementById('nameCount').innerText = name.length; if (name.trim().length > 0 && link.trim().length > 0) { btn.classList.add('active'); btn.disabled = false; } else { btn.classList.remove('active'); btn.disabled = true; } }
+    function submitNewStore() { if (API_URL === '你要換成你的網址') return alert('請先設定 API 網址！'); const name = document.getElementById('newStoreName').value.trim(); const link = document.getElementById('newStoreLink').value.trim(); const btn = document.getElementById('insertStoreBtn'); btn.innerText = '處理中...'; btn.disabled = true; setConnectionStatus('connecting'); fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'addStore', storeName: name, fileId: link }) }).then(response => response.json()).then(result => { if(result.result === 'success') { alert('新增成功！'); closeAddStoreModal(); loadOrders(); } else { alert('新增失敗：' + result.message); } }).catch(error => { alert('網路連線失敗，無法新增。'); }).finally(() => { btn.innerText = '插入'; checkAddStoreInput(); setConnectionStatus('connected'); }); }
+    function renderCustomMenus(menus) { document.querySelectorAll('.dynamic-store-item').forEach(e => e.remove()); const anchor = document.getElementById('customStoreAnchor'); menus.forEach(menu => { const div = document.createElement('div'); div.className = 'store-item dynamic-store-item'; div.onclick = function() { showMenuImage(menu.fileId, menu.storeName); }; div.innerHTML = `<div class="store-icon bg-custom">🥤</div><div class="store-info"><p class="store-name">${menu.storeName}</p><p class="store-desc">自訂新增店家</p></div><div class="arrow-icon">›</div>`; anchor.parentNode.insertBefore(div, anchor); }); }
+
+    // 啟動時初始化
+    window.onload = function() {
+        initTimeSelectors();
+        updateClock(); checkConnection(); loadOrders(); 
+        window.addEventListener('online', () => checkConnection());
+        window.addEventListener('offline', () => setConnectionStatus('disconnected'));
+    };
+</script>
+</body>
+</html>
