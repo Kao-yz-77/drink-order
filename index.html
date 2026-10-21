@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>自動點飲料系統</title>
+    <title>TUF ONE-點飲料系統</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background-color: #f9f9f9; position: relative; margin: 0; }
@@ -44,44 +44,11 @@
 
         .cutoff-settings { background-color: #e2e3e5; padding: 15px; border-radius: 5px; margin-bottom: 15px; border: 1px solid #d6d8db; }
         
-        .custom-time-picker {
-            display: flex;
-            align-items: center;
-            background-color: white;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            padding: 2px 5px; 
-            width: fit-content;
-        }
-        .custom-time-picker select {
-            width: auto;
-            border: none;
-            padding: 8px 10px;
-            font-size: 18px; 
-            font-family: monospace;
-            background-color: transparent;
-            cursor: pointer;
-            outline: none;
-            text-align: center;
-            appearance: auto; 
-            -moz-appearance: auto;
-            -webkit-appearance: auto;
-        }
-        .custom-time-picker select:hover:not(:disabled) {
-            background-color: #f1f3f4;
-            border-radius: 4px;
-        }
-        .custom-time-picker select:disabled {
-            color: #6c757d;
-            cursor: not-allowed;
-            background-color: transparent;
-        }
-        .custom-time-picker .time-separator {
-            font-weight: bold;
-            font-size: 20px;
-            margin: 0 2px;
-            color: #333;
-        }
+        .custom-time-picker { display: flex; align-items: center; background-color: white; border: 1px solid #ccc; border-radius: 4px; padding: 2px 5px; width: fit-content; }
+        .custom-time-picker select { width: auto; border: none; padding: 8px 10px; font-size: 18px; font-family: monospace; background-color: transparent; cursor: pointer; outline: none; text-align: center; appearance: auto; -moz-appearance: auto; -webkit-appearance: auto; }
+        .custom-time-picker select:hover:not(:disabled) { background-color: #f1f3f4; border-radius: 4px; }
+        .custom-time-picker select:disabled { color: #6c757d; cursor: not-allowed; background-color: transparent; }
+        .custom-time-picker .time-separator { font-weight: bold; font-size: 20px; margin: 0 2px; color: #333; }
         .custom-time-picker.disabled { background-color: #e9ecef; border-color: #ccc; }
 
         .lock-btn { width: auto; background-color: #0dcaf0; color: #000; padding: 10px 20px; margin-left: 10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;}
@@ -193,6 +160,7 @@
 </div>
 
 <div class="container">
+    
     <div class="top-bar-container">
         <div id="authStatusBox" class="auth-status-box">
             <span id="authStatusText">目前身分：一般填寫人員</span>
@@ -258,6 +226,7 @@
     </div>
 </div>
 
+<!-- ==================== 自訂安全確認彈出視窗 ==================== -->
 <div id="customConfirmModal" class="modal-overlay" style="z-index: 10000;">
     <div class="modal-content">
         <h3 style="margin-top: 0; color: #333;">⚠️ 確認操作</h3>
@@ -269,19 +238,23 @@
     </div>
 </div>
 
+<!-- ==================== 管理員登入 彈出視窗 ==================== -->
 <div id="loginModal" class="modal-overlay" onclick="closeLoginModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
         <div class="login-logo">TUF-ONE</div>
         <div class="login-input-container">
             <input type="password" id="adminPasswordInput" class="login-input" placeholder="管理員密碼" onkeypress="handleLoginEnter(event)">
         </div>
+        <!-- 增加給管理員看的載入提示 -->
+        <div id="loginStatusMsg" style="text-align:center; font-size:14px; color:#5b4de3; display:none; margin-bottom:15px; font-weight:bold;">驗證中...</div>
         <div id="loginErrorMsg" class="login-error">密碼錯誤，請重新輸入</div>
         <div class="login-btn-container">
-            <button class="login-btn" onclick="verifyAdmin()">登 入</button>
+            <button id="loginSubmitBtn" class="login-btn" onclick="verifyAdmin()">登 入</button>
         </div>
     </div>
 </div>
 
+<!-- ==================== 選擇飲料店清單 彈出視窗 ==================== -->
 <div id="menuModal" class="modal-overlay" onclick="closeMenuModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
         <div class="modal-header">
@@ -304,6 +277,7 @@
     </div>
 </div>
 
+<!-- ==================== 新增店家輸入視窗 彈出視窗 ==================== -->
 <div id="addStoreModal" class="modal-overlay" onclick="closeAddStoreModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
         <div class="add-store-form">
@@ -324,6 +298,7 @@
     </div>
 </div>
 
+<!-- ==================== 顯示圖片檢視器 彈出視窗 ==================== -->
 <div id="imageViewerModal" class="modal-overlay" onclick="closeImageViewer(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
         <div class="modal-header">
@@ -344,7 +319,7 @@
 
 <script>
     // 👇👇👇 這裡換成你的 Google Apps Script 部署網址 👇👇👇
-    const API_URL = 'https://script.google.com/macros/s/AKfycbxMJY-qiA-hbJ2isP5DQlEsdAftgOJ3mIwA0TLew1Y8tmp4jO9HmdIyyIhCKSAIcadjSA/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbxwwtD8KEcdahg5L_Y37MzE3ZNCE6ojEujDMCaoklMPcOMh2wu3hELORN_Nal0pDEJXFQ/exec';
     // 👆👆👆 
 
     function initTimeSelectors() {
@@ -377,7 +352,6 @@
         return `${h}:${m}`;
     }
 
-    // 將時間字串分配回下拉選單，並設定停用狀態 (不再強制複寫目前使用者的選擇，除非是鎖定狀態)
     function updateTimePickerUI(timeString, disabled) {
         const hourSelect = document.getElementById('cutoffHour');
         const minuteSelect = document.getElementById('cutoffMinute');
@@ -398,7 +372,6 @@
         minuteSelect.disabled = disabled;
     }
 
-    // 變更時間時，只負責檢查是否該隱藏表單
     function checkTimeChange() {
         const todayStr = getTodayDateString(new Date());
         if (!(globalSettings.date === todayStr && globalSettings.isLocked)) {
@@ -432,19 +405,55 @@
     function closeLoginModal(event) { if(event && event.target.id !== 'loginModal') return; document.getElementById('loginModal').style.display = 'none'; }
     function handleLoginEnter(event) { if (event.key === 'Enter') verifyAdmin(); }
 
+    // ==================== 安全的後端密碼驗證 ====================
     function verifyAdmin() {
-        const pwd = document.getElementById('adminPasswordInput').value;
-        if (pwd === 'Turvo@1987') {
-            isAdmin = true;
-            document.body.classList.add('is-admin');
-            document.getElementById('authStatusText').innerText = '目前身分：管理者 (可修改訂單與截止時間)';
-            document.getElementById('authStatusBox').classList.add('admin-mode');
-            closeLoginModal();
-            loadOrders(); 
-            initCutoffSettings(new Date());
-        } else {
-            document.getElementById('loginErrorMsg').style.display = 'block';
-        }
+        if (API_URL === '你要換成你的網址') return alert('請先設定 API 網址！');
+        const pwdInput = document.getElementById('adminPasswordInput');
+        const statusMsg = document.getElementById('loginStatusMsg');
+        const errorMsg = document.getElementById('loginErrorMsg');
+        const btn = document.getElementById('loginSubmitBtn');
+        const pwd = pwdInput.value;
+        
+        if(!pwd) return;
+
+        // 準備發送驗證請求給後端
+        errorMsg.style.display = 'none';
+        statusMsg.style.display = 'block';
+        pwdInput.disabled = true;
+        btn.disabled = true;
+
+        fetch(API_URL, { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
+            body: JSON.stringify({ action: 'verifyAdmin', password: pwd }) 
+        })
+        .then(response => response.json())
+        .then(result => {
+            if(result.result === 'success') {
+                // 密碼正確，開放權限
+                isAdmin = true;
+                document.body.classList.add('is-admin');
+                document.getElementById('authStatusText').innerText = '目前身分：管理者 (可修改訂單與截止時間)';
+                document.getElementById('authStatusBox').classList.add('admin-mode');
+                closeLoginModal();
+                loadOrders(); 
+                initCutoffSettings(new Date());
+            } else {
+                // 密碼錯誤
+                errorMsg.innerText = result.message || '密碼錯誤，請重新輸入';
+                errorMsg.style.display = 'block';
+            }
+        })
+        .catch(error => { 
+            errorMsg.innerText = '網路連線失敗，無法驗證身分。';
+            errorMsg.style.display = 'block';
+        })
+        .finally(() => { 
+            statusMsg.style.display = 'none';
+            pwdInput.disabled = false;
+            btn.disabled = false;
+            if(!isAdmin) pwdInput.focus();
+        });
     }
 
     let globalSettings = { date: '', time: '11:00', isLocked: false };
@@ -518,8 +527,7 @@
             if(isAdmin) unlockBtn.classList.add('show-unlock');
             else unlockBtn.classList.remove('show-unlock');
         } else {
-            // 解鎖狀態下，不要強制刷新使用者的時間選單
-            updateTimePickerUI(null, false);
+            updateTimePickerUI(globalSettings.time || '11:00', false);
             
             lockBtn.disabled = false;
             lockBtn.innerText = '確定鎖定'; 
@@ -622,7 +630,6 @@
         .then(result => {
             globalSettings = result.settings || { date: '', time: '11:00', isLocked: false };
             
-            // 初始化時，如果不是鎖定狀態，將伺服器的預設時間同步到 UI
             if (globalSettings.date === getTodayDateString(new Date()) && globalSettings.isLocked) {
                 initCutoffSettings(new Date());
             } else {
@@ -715,7 +722,6 @@
         XLSX.writeFile(wb, `今日飲料訂單_${dateStr}.xlsx`);
     }
 
-    // 只有時鐘與時間檢查功能，不再觸發更新 UI 選單，以防止卡死
     function updateClock() {
         const now = new Date();
         const h = now.getHours().toString().padStart(2, '0');
@@ -753,7 +759,6 @@
     function submitNewStore() { if (API_URL === '你要換成你的網址') return alert('請先設定 API 網址！'); const name = document.getElementById('newStoreName').value.trim(); const link = document.getElementById('newStoreLink').value.trim(); const btn = document.getElementById('insertStoreBtn'); btn.innerText = '處理中...'; btn.disabled = true; setConnectionStatus('connecting'); fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'addStore', storeName: name, fileId: link }) }).then(response => response.json()).then(result => { if(result.result === 'success') { alert('新增成功！'); closeAddStoreModal(); loadOrders(); } else { alert('新增失敗：' + result.message); } }).catch(error => { alert('網路連線失敗，無法新增。'); }).finally(() => { btn.innerText = '插入'; checkAddStoreInput(); setConnectionStatus('connected'); }); }
     function renderCustomMenus(menus) { document.querySelectorAll('.dynamic-store-item').forEach(e => e.remove()); const anchor = document.getElementById('customStoreAnchor'); menus.forEach(menu => { const div = document.createElement('div'); div.className = 'store-item dynamic-store-item'; div.onclick = function() { showMenuImage(menu.fileId, menu.storeName); }; div.innerHTML = `<div class="store-icon bg-custom">🥤</div><div class="store-info"><p class="store-name">${menu.storeName}</p><p class="store-desc">自訂新增店家</p></div><div class="arrow-icon">›</div>`; anchor.parentNode.insertBefore(div, anchor); }); }
 
-    // 啟動時初始化
     window.onload = function() {
         initTimeSelectors();
         updateClock(); checkConnection(); loadOrders(); 
