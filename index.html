@@ -81,7 +81,8 @@
         .status-disconnected { background-color: #dc3545; }
         .time-display { margin-left: 15px; padding-left: 15px; border-left: 1px solid #ddd; font-family: monospace; font-size: 15px; }
 
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); z-index: 9999; justify-content: center; align-items: center; }
+        /* ==================== 模態視窗通用樣式 ==================== */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); z-index: 9999; justify-content: center; align-items: center; padding: 10px; box-sizing: border-box; }
         .modal-content { background-color: #f8f9fa; width: 90%; max-width: 450px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); overflow: hidden; display: flex; flex-direction: column; max-height: 85vh; }
         .modal-header { background-color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; flex-shrink: 0; }
         .modal-header h3 { margin: 0; font-size: 18px; color: #333; display: flex; align-items: center; gap: 8px; }
@@ -89,6 +90,7 @@
         .close-btn:hover { color: #333; }
         .modal-body { padding: 15px; overflow-y: auto; }
         
+        /* 登入視窗專用 */
         #loginModal .modal-content { max-width: 350px; background: linear-gradient(to bottom, #ffffff, #e0e0e0); border-radius: 8px; box-shadow: 0 15px 30px rgba(0,0,0,0.5); }
         .login-logo { font-size: 36px; font-weight: 900; font-family: 'Arial Black', sans-serif; color: #ff8c00; text-align: center; margin: 30px 0; letter-spacing: 2px; text-shadow: 0px 4px 6px rgba(0,0,0,0.1); }
         .login-input-container { padding: 0 30px 20px; }
@@ -99,19 +101,57 @@
         .login-btn:hover { background-color: #e9ecef; }
         .login-error { color: #dc3545; font-size: 12px; text-align: center; margin-top: -10px; margin-bottom: 15px; display: none; }
 
-        .store-item { display: flex; align-items: center; background-color: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; cursor: pointer; border: 1px solid #eee; text-decoration: none; color: inherit; transition: border-color 0.2s; }
-        .store-item:hover { border-color: #5b4de3; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .store-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; font-size: 20px; margin-right: 15px; flex-shrink: 0; }
+        /* ==================== 飲料店菜單選單 (網格設計) ==================== */
+        #menuModal .modal-content { max-width: 800px; /* 為了容納一列 5 個，視窗加寬 */ }
+        
+        #menuListContainer {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr); /* 一列 5 個等寬 */
+            gap: 15px;
+            padding: 15px;
+        }
+
+        .store-item { 
+            display: flex; 
+            flex-direction: column; /* 垂直排列 */
+            align-items: center; 
+            justify-content: center;
+            background-color: white; 
+            padding: 15px 10px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            border: 1px solid #eee; 
+            text-decoration: none; 
+            color: inherit; 
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .store-item:hover { border-color: #5b4de3; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transform: translateY(-3px); }
+        
+        .store-icon { 
+            width: 50px; 
+            height: 50px; 
+            border-radius: 50%; 
+            display: flex; justify-content: center; align-items: center; 
+            color: white; font-size: 24px; 
+            margin-bottom: 10px; 
+        }
         
         .bg-yellow { background-color: #ffc107; color: #000; } .bg-navy { background-color: #1a2a6c; } .bg-green { background-color: #28a745; } .bg-red { background-color: #dc3545; }
         .bg-orange { background-color: #fd7e14; } .bg-blue { background-color: #0d6efd; } .bg-teal { background-color: #20c997; } .bg-purple { background-color: #6f42c1; } .bg-custom { background-color: #6c757d; } 
 
-        .store-info { flex-grow: 1; } .store-name { margin: 0 0 4px 0; font-size: 16px; font-weight: bold; color: #333; } .store-desc { margin: 0; font-size: 12px; color: #888; }
-        .arrow-icon { color: #ccc; font-size: 18px; font-weight: bold; }
+        .store-info { display: flex; flex-direction: column; align-items: center; width: 100%;} 
+        .store-name { margin: 0 0 5px 0; font-size: 15px; font-weight: bold; color: #333; } 
+        .store-desc { margin: 0; font-size: 11px; color: #888; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-        .add-store-btn { display: flex; align-items: center; justify-content: center; padding: 15px; background-color: #e9ecef; color: #495057; border-radius: 8px; cursor: pointer; border: 2px dashed #ced4da; font-weight: bold; margin-top: 10px; transition: all 0.2s;}
-        .add-store-btn:hover { background-color: #dee2e6; border-color: #adb5bd; }
+        .add-store-btn { 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            padding: 15px 10px; background-color: #e9ecef; color: #495057; border-radius: 8px; cursor: pointer; border: 2px dashed #ced4da; font-weight: bold; transition: all 0.2s; text-align: center; font-size: 14px;
+        }
+        .add-store-btn:hover { background-color: #dee2e6; border-color: #adb5bd; transform: translateY(-3px); }
+        .add-store-btn .icon-plus { font-size: 24px; margin-bottom: 5px; color: #6c757d; }
 
+        /* 圖片檢視器 */
         #imageViewerModal .modal-content { width: 95%; max-width: 1200px; max-height: 95vh; background-color: #111; }
         #imageViewerModal .modal-header { background-color: #222; border-bottom: 1px solid #333; color: white; }
         #imageViewerModal .modal-header h3 { color: white; font-size: 18px; }
@@ -121,6 +161,7 @@
         .image-container { width: 100%; height: 100%; overflow: auto; display: flex; justify-content: center; align-items: flex-start; background-color: #111; }
         #menuImageDisplay { max-width: 100%; height: auto; object-fit: contain; display: none; }
 
+        /* 新增店家視窗 */
         #addStoreModal .modal-content { max-width: 400px; border-radius: 8px; }
         .add-store-form { padding: 25px 20px 20px 20px; background-color: white; }
         .material-input-group { margin-bottom: 25px; position: relative; padding-top: 15px; }
@@ -134,6 +175,7 @@
         .insert-btn { background-color: #e0e0e0; color: #9e9e9e; cursor: not-allowed; }
         .insert-btn.active { background-color: #5b4de3; color: white; cursor: pointer; }
 
+        /* 自訂確認視窗樣式 */
         #customConfirmModal .modal-content { max-width: 320px; padding: 25px; border-radius: 12px; background-color: white; text-align: center; }
         #customConfirmMessage { font-size: 15px; color: #555; margin: 15px 0 25px; line-height: 1.5; white-space: pre-wrap; }
         .confirm-btn-group { display: flex; justify-content: space-between; gap: 10px; }
@@ -143,11 +185,20 @@
         .confirm-btn-danger { background-color: #dc3545; color: white; }
         .confirm-btn-danger:hover { background-color: #c82333; }
 
+        /* 響應式：平板與手機螢幕網格調整 */
         @media (max-width: 768px) {
             .top-bar-container { flex-direction: column; gap: 10px; align-items: stretch;}
             .header-controls { justify-content: space-between; }
             .status-bar { top: 10px; right: 10px; padding: 6px 12px; font-size: 12px; }
             .lock-btn, .unlock-btn { padding: 8px; margin-left: 5px; font-size: 13px; }
+            
+            /* 平板：一列 3 個 */
+            #menuListContainer { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (max-width: 480px) {
+            /* 手機：一列 2 個 */
+            #menuListContainer { grid-template-columns: repeat(2, 1fr); }
+            .store-name { font-size: 14px; }
         }
     </style>
 </head>
@@ -175,13 +226,11 @@
     <div class="cutoff-settings admin-only">
         <label style="color: #383d41; font-size:16px;">⚙️ [管理員專屬] 全域設定今日截止時間:</label>
         <div style="display: flex; align-items: center; margin-top: 5px;">
-            
             <div id="timePickerWrapper" class="custom-time-picker">
                 <select id="cutoffHour" onchange="checkTimeChange()"></select>
                 <span class="time-separator">:</span>
                 <select id="cutoffMinute" onchange="checkTimeChange()"></select>
             </div>
-
             <button id="lockTimeBtn" class="lock-btn" onclick="lockCutoffTime()">確定鎖定</button>
             <button id="unlockTimeBtn" class="unlock-btn" onclick="actionUnlockTime()">🔓 解除鎖定 (重新開放)</button>
         </div>
@@ -226,7 +275,7 @@
     </div>
 </div>
 
-<!-- ==================== 自訂安全確認彈出視窗 ==================== -->
+<!-- 自訂確認彈出視窗 -->
 <div id="customConfirmModal" class="modal-overlay" style="z-index: 10000;">
     <div class="modal-content">
         <h3 style="margin-top: 0; color: #333;">⚠️ 確認操作</h3>
@@ -238,14 +287,13 @@
     </div>
 </div>
 
-<!-- ==================== 管理員登入 彈出視窗 ==================== -->
+<!-- 管理員登入 彈出視窗 -->
 <div id="loginModal" class="modal-overlay" onclick="closeLoginModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
         <div class="login-logo">TUF-ONE</div>
         <div class="login-input-container">
             <input type="password" id="adminPasswordInput" class="login-input" placeholder="管理員密碼" onkeypress="handleLoginEnter(event)">
         </div>
-        <!-- 增加給管理員看的載入提示 -->
         <div id="loginStatusMsg" style="text-align:center; font-size:14px; color:#5b4de3; display:none; margin-bottom:15px; font-weight:bold;">驗證中...</div>
         <div id="loginErrorMsg" class="login-error">密碼錯誤，請重新輸入</div>
         <div class="login-btn-container">
@@ -254,7 +302,7 @@
     </div>
 </div>
 
-<!-- ==================== 選擇飲料店清單 彈出視窗 ==================== -->
+<!-- ==================== 選擇飲料店清單 彈出視窗 (已改為網格設計) ==================== -->
 <div id="menuModal" class="modal-overlay" onclick="closeMenuModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
         <div class="modal-header">
@@ -262,22 +310,56 @@
             <button class="close-btn" onclick="closeMenuModal()">&times;</button>
         </div>
         <div class="modal-body" id="menuListContainer">
-            <div class="store-item" onclick="showMenuImage('1aKawumOCMP0RpMX-G_9YC8za-evYw9__', '50嵐')"><div class="store-icon bg-yellow">🥤</div><div class="store-info"><p class="store-name">50嵐</p><p class="store-desc">經典不敗的國民飲料店</p></div><div class="arrow-icon">›</div></div>
-            <div class="store-item" onclick="showMenuImage('1nInhPLgghWmEOvDc2kEJeZUS2p0GF3ie', '麻古茶坊')"><div class="store-icon bg-red">🥤</div><div class="store-info"><p class="store-name">麻古茶坊</p><p class="store-desc">喝的甜品，新鮮果粒茶</p></div><div class="arrow-icon">›</div></div>
-            <div class="store-item" onclick="showMenuImage('1yeUL9PPtZ64huFeyRGsHE4ekynancf6i', '得正')"><div class="store-icon bg-navy">🥤</div><div class="store-info"><p class="store-name">得正</p><p class="store-desc">專注烏龍茶的職人品牌</p></div><div class="arrow-icon">›</div></div>
-            <div class="store-item" onclick="showMenuImage('1YzKmWXQqvk1W5ZUNirWHJ4X2LtCE5HoE', '龜記茗品')"><div class="store-icon bg-green">🥤</div><div class="store-info"><p class="store-name">龜記茗品</p><p class="store-desc">小人物大生活，紅柚翡翠</p></div><div class="arrow-icon">›</div></div>
-            <div class="store-item" onclick="showMenuImage('1A4LaNlFSivEBrmDRAXhpwd74y9Cs1SKt', '五桐號')"><div class="store-icon bg-orange">🥤</div><div class="store-info"><p class="store-name">五桐號</p><p class="store-desc">手工凍飲與手沖泰奶</p></div><div class="arrow-icon">›</div></div>
-            <div class="store-item" onclick="showMenuImage('1l7mHhFQ5FHImBWCtbSwRoX6HRnYF8mzj', '烏弄')"><div class="store-icon bg-teal">🥤</div><div class="store-info"><p class="store-name">烏弄</p><p class="store-desc">台灣原茶，自然好韻味</p></div><div class="arrow-icon">›</div></div>
-            <div class="store-item" onclick="showMenuImage('1V9vyYuDORZcxuQaMqKfJgYlUWRfrpBhK', '水巷茶弄')"><div class="store-icon bg-blue">🥤</div><div class="store-info"><p class="store-name">水巷茶弄</p><p class="store-desc">好茶煮好料，經典回味</p></div><div class="arrow-icon">›</div></div>
-            <div class="store-item" onclick="showMenuImage('15_2H9XhhE53Q9fguWOUcfnTzAYM3yKlA', '華得來')"><div class="store-icon bg-purple">🥤</div><div class="store-info"><p class="store-name">華得來</p><p class="store-desc">海線傳奇，料多實在</p></div><div class="arrow-icon">›</div></div>
-            <div class="store-item" onclick="showMenuImage('10GVcm0k6u-dqP60jCUtAFzWeXlXMQ6GW', '果果青')"><div class="store-icon" style="background-color:#5cce69;">🥤</div><div class="store-info"><p class="store-name">果果青</p><p class="store-desc">新鮮鮮果茶飲</p></div><div class="arrow-icon">›</div></div>
+            <!-- 預設店家改為直立卡片 -->
+            <div class="store-item" onclick="showMenuImage('1aKawumOCMP0RpMX-G_9YC8za-evYw9__', '50嵐')">
+                <div class="store-icon bg-yellow">🥤</div>
+                <div class="store-info"><p class="store-name">50嵐</p><p class="store-desc">經典不敗</p></div>
+            </div>
+            <div class="store-item" onclick="showMenuImage('1nInhPLgghWmEOvDc2kEJeZUS2p0GF3ie', '麻古茶坊')">
+                <div class="store-icon bg-red">🥤</div>
+                <div class="store-info"><p class="store-name">麻古茶坊</p><p class="store-desc">新鮮果粒茶</p></div>
+            </div>
+            <div class="store-item" onclick="showMenuImage('1yeUL9PPtZ64huFeyRGsHE4ekynancf6i', '得正')">
+                <div class="store-icon bg-navy">🥤</div>
+                <div class="store-info"><p class="store-name">得正</p><p class="store-desc">烏龍茶職人</p></div>
+            </div>
+            <div class="store-item" onclick="showMenuImage('1YzKmWXQqvk1W5ZUNirWHJ4X2LtCE5HoE', '龜記茗品')">
+                <div class="store-icon bg-green">🥤</div>
+                <div class="store-info"><p class="store-name">龜記茗品</p><p class="store-desc">紅柚翡翠</p></div>
+            </div>
+            <div class="store-item" onclick="showMenuImage('1A4LaNlFSivEBrmDRAXhpwd74y9Cs1SKt', '五桐號')">
+                <div class="store-icon bg-orange">🥤</div>
+                <div class="store-info"><p class="store-name">五桐號</p><p class="store-desc">手工凍飲</p></div>
+            </div>
+            <div class="store-item" onclick="showMenuImage('1l7mHhFQ5FHImBWCtbSwRoX6HRnYF8mzj', '烏弄')">
+                <div class="store-icon bg-teal">🥤</div>
+                <div class="store-info"><p class="store-name">烏弄</p><p class="store-desc">自然好韻味</p></div>
+            </div>
+            <div class="store-item" onclick="showMenuImage('1V9vyYuDORZcxuQaMqKfJgYlUWRfrpBhK', '水巷茶弄')">
+                <div class="store-icon bg-blue">🥤</div>
+                <div class="store-info"><p class="store-name">水巷茶弄</p><p class="store-desc">經典回味</p></div>
+            </div>
+            <div class="store-item" onclick="showMenuImage('15_2H9XhhE53Q9fguWOUcfnTzAYM3yKlA', '華得來')">
+                <div class="store-icon bg-purple">🥤</div>
+                <div class="store-info"><p class="store-name">華得來</p><p class="store-desc">海線傳奇</p></div>
+            </div>
+            <div class="store-item" onclick="showMenuImage('10GVcm0k6u-dqP60jCUtAFzWeXlXMQ6GW', '果果青')">
+                <div class="store-icon" style="background-color:#5cce69;">🥤</div>
+                <div class="store-info"><p class="store-name">果果青</p><p class="store-desc">新鮮茶飲</p></div>
+            </div>
+            
             <div id="customStoreAnchor"></div>
-            <div class="add-store-btn" onclick="openAddStoreModal()">+ 新增店家菜單</div>
+            
+            <!-- 新增按鈕也改為同等大小的網格卡片 -->
+            <div class="add-store-btn" onclick="openAddStoreModal()">
+                <div class="icon-plus">+</div>
+                <div>新增菜單</div>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- ==================== 新增店家輸入視窗 彈出視窗 ==================== -->
+<!-- 新增店家輸入視窗 -->
 <div id="addStoreModal" class="modal-overlay" onclick="closeAddStoreModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
         <div class="add-store-form">
@@ -298,7 +380,7 @@
     </div>
 </div>
 
-<!-- ==================== 顯示圖片檢視器 彈出視窗 ==================== -->
+<!-- 圖片檢視器 -->
 <div id="imageViewerModal" class="modal-overlay" onclick="closeImageViewer(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
         <div class="modal-header">
@@ -325,58 +407,24 @@
     function initTimeSelectors() {
         const hourSelect = document.getElementById('cutoffHour');
         const minuteSelect = document.getElementById('cutoffMinute');
-        
-        for (let i = 0; i <= 23; i++) {
-            let opt = document.createElement('option');
-            let val = i.toString().padStart(2, '0');
-            opt.value = val;
-            opt.text = val;
-            hourSelect.appendChild(opt);
-        }
-        
-        for (let i = 0; i <= 59; i++) {
-            let opt = document.createElement('option');
-            let val = i.toString().padStart(2, '0');
-            opt.value = val;
-            opt.text = val;
-            minuteSelect.appendChild(opt);
-        }
-        
-        hourSelect.value = '11';
-        minuteSelect.value = '00';
+        for (let i = 0; i <= 23; i++) { let opt = document.createElement('option'); let val = i.toString().padStart(2, '0'); opt.value = val; opt.text = val; hourSelect.appendChild(opt); }
+        for (let i = 0; i <= 59; i++) { let opt = document.createElement('option'); let val = i.toString().padStart(2, '0'); opt.value = val; opt.text = val; minuteSelect.appendChild(opt); }
+        hourSelect.value = '11'; minuteSelect.value = '00';
     }
-
-    function getSelectedTime() {
-        const h = document.getElementById('cutoffHour').value;
-        const m = document.getElementById('cutoffMinute').value;
-        return `${h}:${m}`;
-    }
-
+    function getSelectedTime() { return `${document.getElementById('cutoffHour').value}:${document.getElementById('cutoffMinute').value}`; }
     function updateTimePickerUI(timeString, disabled) {
         const hourSelect = document.getElementById('cutoffHour');
         const minuteSelect = document.getElementById('cutoffMinute');
         const wrapper = document.getElementById('timePickerWrapper');
-
         if (disabled) {
-            if (timeString && timeString.includes(':')) {
-                const [h, m] = timeString.split(':');
-                hourSelect.value = h;
-                minuteSelect.value = m;
-            }
+            if (timeString && timeString.includes(':')) { const [h, m] = timeString.split(':'); hourSelect.value = h; minuteSelect.value = m; }
             wrapper.classList.add('disabled');
-        } else {
-            wrapper.classList.remove('disabled');
-        }
-
-        hourSelect.disabled = disabled;
-        minuteSelect.disabled = disabled;
+        } else { wrapper.classList.remove('disabled'); }
+        hourSelect.disabled = disabled; minuteSelect.disabled = disabled;
     }
-
     function checkTimeChange() {
         const todayStr = getTodayDateString(new Date());
-        if (!(globalSettings.date === todayStr && globalSettings.isLocked)) {
-            checkCutoffTime(new Date());
-        }
+        if (!(globalSettings.date === todayStr && globalSettings.isLocked)) checkCutoffTime(new Date());
     }
 
     let confirmCallback = null;
@@ -405,7 +453,6 @@
     function closeLoginModal(event) { if(event && event.target.id !== 'loginModal') return; document.getElementById('loginModal').style.display = 'none'; }
     function handleLoginEnter(event) { if (event.key === 'Enter') verifyAdmin(); }
 
-    // ==================== 安全的後端密碼驗證 ====================
     function verifyAdmin() {
         if (API_URL === '你要換成你的網址') return alert('請先設定 API 網址！');
         const pwdInput = document.getElementById('adminPasswordInput');
@@ -413,47 +460,22 @@
         const errorMsg = document.getElementById('loginErrorMsg');
         const btn = document.getElementById('loginSubmitBtn');
         const pwd = pwdInput.value;
-        
         if(!pwd) return;
+        errorMsg.style.display = 'none'; statusMsg.style.display = 'block'; pwdInput.disabled = true; btn.disabled = true;
 
-        // 準備發送驗證請求給後端
-        errorMsg.style.display = 'none';
-        statusMsg.style.display = 'block';
-        pwdInput.disabled = true;
-        btn.disabled = true;
-
-        fetch(API_URL, { 
-            method: 'POST', 
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
-            body: JSON.stringify({ action: 'verifyAdmin', password: pwd }) 
-        })
+        fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'verifyAdmin', password: pwd }) })
         .then(response => response.json())
         .then(result => {
             if(result.result === 'success') {
-                // 密碼正確，開放權限
                 isAdmin = true;
                 document.body.classList.add('is-admin');
                 document.getElementById('authStatusText').innerText = '目前身分：管理者 (可修改訂單與截止時間)';
                 document.getElementById('authStatusBox').classList.add('admin-mode');
-                closeLoginModal();
-                loadOrders(); 
-                initCutoffSettings(new Date());
-            } else {
-                // 密碼錯誤
-                errorMsg.innerText = result.message || '密碼錯誤，請重新輸入';
-                errorMsg.style.display = 'block';
-            }
+                closeLoginModal(); loadOrders(); initCutoffSettings(new Date());
+            } else { errorMsg.innerText = result.message || '密碼錯誤，請重新輸入'; errorMsg.style.display = 'block'; }
         })
-        .catch(error => { 
-            errorMsg.innerText = '網路連線失敗，無法驗證身分。';
-            errorMsg.style.display = 'block';
-        })
-        .finally(() => { 
-            statusMsg.style.display = 'none';
-            pwdInput.disabled = false;
-            btn.disabled = false;
-            if(!isAdmin) pwdInput.focus();
-        });
+        .catch(error => { errorMsg.innerText = '網路連線失敗，無法驗證身分。'; errorMsg.style.display = 'block'; })
+        .finally(() => { statusMsg.style.display = 'none'; pwdInput.disabled = false; btn.disabled = false; if(!isAdmin) pwdInput.focus(); });
     }
 
     let globalSettings = { date: '', time: '11:00', isLocked: false };
@@ -485,10 +507,8 @@
     function actionUnlockTime() {
         showConfirm("確定要解除鎖定嗎？\n解除後將重新開放所有人填寫訂購單。", function() {
             if (API_URL === '你要換成你的網址') return alert('請先設定 API 網址！');
-
             const unlockBtn = document.getElementById('unlockTimeBtn');
-            unlockBtn.innerText = '處理中...';
-            unlockBtn.disabled = true;
+            unlockBtn.innerText = '處理中...'; unlockBtn.disabled = true;
             setConnectionStatus('connecting');
 
             const todayStr = getTodayDateString(new Date()); 
@@ -498,9 +518,7 @@
             .then(response => response.json())
             .then(result => {
                 if(result.result === 'success') {
-                    globalSettings.isLocked = false;
-                    alert(`🔓 已成功解除鎖定！現在所有人都可以繼續訂購。`);
-                    initCutoffSettings(new Date()); 
+                    globalSettings.isLocked = false; alert(`🔓 已成功解除鎖定！現在所有人都可以繼續訂購。`); initCutoffSettings(new Date()); 
                 } else { alert('解鎖失敗：' + result.message); }
             })
             .catch(error => { alert('網路連線失敗，無法解鎖。'); })
@@ -516,26 +534,13 @@
 
         if (globalSettings.date === todayStr && globalSettings.isLocked) {
             updateTimePickerUI(globalSettings.time, true);
-            
-            lockBtn.disabled = true;
-            lockBtn.innerText = '🔒 全域已鎖定'; 
-            lockBtn.style.backgroundColor = '#6c757d'; 
-            lockBtn.style.color = '#fff';
-            statusMsg.innerHTML = `🔒 系統已將今日截止時間強制鎖定為 <strong style="color:#d9534f;">${globalSettings.time}</strong>。`; 
-            statusMsg.style.color = '#198754';
-
-            if(isAdmin) unlockBtn.classList.add('show-unlock');
-            else unlockBtn.classList.remove('show-unlock');
+            lockBtn.disabled = true; lockBtn.innerText = '🔒 全域已鎖定'; lockBtn.style.backgroundColor = '#6c757d'; lockBtn.style.color = '#fff';
+            statusMsg.innerHTML = `🔒 系統已將今日截止時間強制鎖定為 <strong style="color:#d9534f;">${globalSettings.time}</strong>。`; statusMsg.style.color = '#198754';
+            if(isAdmin) unlockBtn.classList.add('show-unlock'); else unlockBtn.classList.remove('show-unlock');
         } else {
             updateTimePickerUI(globalSettings.time || '11:00', false);
-            
-            lockBtn.disabled = false;
-            lockBtn.innerText = '確定鎖定'; 
-            lockBtn.style.backgroundColor = '#0dcaf0'; 
-            lockBtn.style.color = '#000';
-            statusMsg.innerHTML = '※ 鎖定或解鎖將同步套用至所有人。午夜 00:00 自動重置。'; 
-            statusMsg.style.color = '#6c757d';
-
+            lockBtn.disabled = false; lockBtn.innerText = '確定鎖定'; lockBtn.style.backgroundColor = '#0dcaf0'; lockBtn.style.color = '#000';
+            statusMsg.innerHTML = '※ 鎖定或解鎖將同步套用至所有人。午夜 00:00 自動重置。'; statusMsg.style.color = '#6c757d';
             unlockBtn.classList.remove('show-unlock');
         }
         checkCutoffTime(now);
@@ -544,8 +549,7 @@
     function checkCutoffTime(now) {
         let cutoffValue = '11:00';
         const todayStr = getTodayDateString(now);
-        if (globalSettings.date === todayStr && globalSettings.isLocked) cutoffValue = globalSettings.time;
-        else cutoffValue = getSelectedTime();
+        if (globalSettings.date === todayStr && globalSettings.isLocked) cutoffValue = globalSettings.time; else cutoffValue = getSelectedTime();
 
         const [cutoffHour, cutoffMinute] = cutoffValue.split(':').map(Number);
         const cutoffDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), cutoffHour, cutoffMinute, 0);
@@ -559,8 +563,7 @@
         } else {
             orderFormContainer.style.display = 'block';
             let msgText = globalSettings.isLocked ? `✅ 系統開放中，今日訂餐截止時間為 <strong>${cutoffValue}</strong>，請盡早填寫。` : `✅ 系統開放中 (尚未鎖定截止時間)，請自由填寫訂購。`;
-            cutoffMessage.innerHTML = msgText;
-            cutoffMessage.style.color = '#0f5132'; cutoffMessage.style.backgroundColor = '#d1e7dd'; cutoffMessage.style.border = '2px solid #badbcc';
+            cutoffMessage.innerHTML = msgText; cutoffMessage.style.color = '#0f5132'; cutoffMessage.style.backgroundColor = '#d1e7dd'; cutoffMessage.style.border = '2px solid #badbcc';
         }
     }
 
@@ -584,21 +587,11 @@
         const actionTd = tr.querySelector('.admin-only');
         actionTd.innerHTML = `<button class="table-action-btn btn-save" onclick="saveRow(this, ${rowIndex})" title="儲存">💾</button><button class="table-action-btn btn-cancel" onclick="cancelEdit(this)" title="取消">❌</button>`;
     }
-    
-    function createSelectTableHTML(options, selectedValue) {
-        let html = `<select class="edit-input">`;
-        options.forEach(opt => { const selected = (opt === selectedValue) ? 'selected' : ''; html += `<option value="${opt}" ${selected}>${opt}</option>`; });
-        html += `</select>`; return html;
-    }
-    
+    function createSelectTableHTML(options, selectedValue) { let html = `<select class="edit-input">`; options.forEach(opt => { const selected = (opt === selectedValue) ? 'selected' : ''; html += `<option value="${opt}" ${selected}>${opt}</option>`; }); html += `</select>`; return html; }
     function cancelEdit(btn) { loadOrders(); }
-
     function saveRow(btn, rowIndex) {
-        const tr = btn.closest('tr');
-        const inputs = tr.querySelectorAll('.edit-input');
-        const timeVal = tr.querySelectorAll('td')[0].innerText;
+        const tr = btn.closest('tr'); const inputs = tr.querySelectorAll('.edit-input'); const timeVal = tr.querySelectorAll('td')[0].innerText;
         const updatedData = { time: timeVal, orderName: inputs[0].value, drinkName: inputs[1].value, size: inputs[2].value, ice: inputs[3].value, sugar: inputs[4].value, price: inputs[5].value };
-
         btn.innerHTML = '⏳'; btn.disabled = true; tr.style.opacity = '0.7';
 
         fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'updateOrder', rowIndex: rowIndex, orderData: updatedData }) })
@@ -756,9 +749,51 @@
     function openAddStoreModal() { document.getElementById('menuModal').style.display = 'none'; document.getElementById('addStoreModal').style.display = 'flex'; document.getElementById('newStoreName').value = ''; document.getElementById('newStoreLink').value = ''; checkAddStoreInput(); }
     function closeAddStoreModal(event) { if(event && event.target.id !== 'addStoreModal' && !event.target.classList.contains('cancel-btn')) return; document.getElementById('addStoreModal').style.display = 'none'; document.getElementById('menuModal').style.display = 'flex'; }
     function checkAddStoreInput() { const name = document.getElementById('newStoreName').value; const link = document.getElementById('newStoreLink').value; const btn = document.getElementById('insertStoreBtn'); document.getElementById('nameCount').innerText = name.length; if (name.trim().length > 0 && link.trim().length > 0) { btn.classList.add('active'); btn.disabled = false; } else { btn.classList.remove('active'); btn.disabled = true; } }
-    function submitNewStore() { if (API_URL === '你要換成你的網址') return alert('請先設定 API 網址！'); const name = document.getElementById('newStoreName').value.trim(); const link = document.getElementById('newStoreLink').value.trim(); const btn = document.getElementById('insertStoreBtn'); btn.innerText = '處理中...'; btn.disabled = true; setConnectionStatus('connecting'); fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'addStore', storeName: name, fileId: link }) }).then(response => response.json()).then(result => { if(result.result === 'success') { alert('新增成功！'); closeAddStoreModal(); loadOrders(); } else { alert('新增失敗：' + result.message); } }).catch(error => { alert('網路連線失敗，無法新增。'); }).finally(() => { btn.innerText = '插入'; checkAddStoreInput(); setConnectionStatus('connected'); }); }
-    function renderCustomMenus(menus) { document.querySelectorAll('.dynamic-store-item').forEach(e => e.remove()); const anchor = document.getElementById('customStoreAnchor'); menus.forEach(menu => { const div = document.createElement('div'); div.className = 'store-item dynamic-store-item'; div.onclick = function() { showMenuImage(menu.fileId, menu.storeName); }; div.innerHTML = `<div class="store-icon bg-custom">🥤</div><div class="store-info"><p class="store-name">${menu.storeName}</p><p class="store-desc">自訂新增店家</p></div><div class="arrow-icon">›</div>`; anchor.parentNode.insertBefore(div, anchor); }); }
+    
+    // 【更新】新增菜單存入後端後，重新渲染網格卡片
+    function submitNewStore() { 
+        if (API_URL === '你要換成你的網址') return alert('請先設定 API 網址！'); 
+        const name = document.getElementById('newStoreName').value.trim(); 
+        const link = document.getElementById('newStoreLink').value.trim(); 
+        const btn = document.getElementById('insertStoreBtn'); 
+        btn.innerText = '處理中...'; btn.disabled = true; setConnectionStatus('connecting'); 
+        
+        fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'addStore', storeName: name, fileId: link }) })
+        .then(response => response.json())
+        .then(result => { 
+            if(result.result === 'success') { 
+                alert('新增成功！'); 
+                closeAddStoreModal(); 
+                loadOrders(); 
+            } else { 
+                alert('新增失敗：' + result.message); 
+            } 
+        })
+        .catch(error => { alert('網路連線失敗，無法新增。'); })
+        .finally(() => { btn.innerText = '插入'; checkAddStoreInput(); setConnectionStatus('connected'); }); 
+    }
+    
+    // 【更新】自訂新增店家的渲染邏輯，改為直立卡片結構，插入到「+新增按鈕」之前
+    function renderCustomMenus(menus) { 
+        document.querySelectorAll('.dynamic-store-item').forEach(e => e.remove()); 
+        const anchor = document.getElementById('customStoreAnchor'); 
+        menus.forEach(menu => { 
+            const div = document.createElement('div'); 
+            div.className = 'store-item dynamic-store-item'; 
+            div.onclick = function() { showMenuImage(menu.fileId, menu.storeName); }; 
+            // 結構對齊其他預設卡片
+            div.innerHTML = `
+                <div class="store-icon bg-custom">🥤</div>
+                <div class="store-info">
+                    <p class="store-name">${menu.storeName}</p>
+                    <p class="store-desc">自訂新增</p>
+                </div>
+            `; 
+            anchor.parentNode.insertBefore(div, anchor); 
+        }); 
+    }
 
+    // 啟動時初始化
     window.onload = function() {
         initTimeSelectors();
         updateClock(); checkConnection(); loadOrders(); 
